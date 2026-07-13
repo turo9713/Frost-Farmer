@@ -1,0 +1,7 @@
+## Interface: 120000
+## Title: FrostFarmer
+## Notes: Smart farming assistant addon
+## Author: turo9713
+
+FrostFarmer.lua
+Core/Init.lua
