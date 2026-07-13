@@ -1,4 +1,4 @@
--- Environment Adaptation Controller
-local AdaptationController = {}
-function AdaptationController:Adjust(state) return state end
-return AdaptationController
+-- Real World Adaptation Layer
+local Adaptation = {}
+function Adaptation:Adjust(state) return state end
+return Adaptation
