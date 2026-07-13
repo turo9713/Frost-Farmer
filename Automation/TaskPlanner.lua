@@ -1,7 +1,6 @@
+-- Task planner module
 local TaskPlanner = {}
-
-function TaskPlanner.Create(task)
-    return task
+function TaskPlanner.plan(task)
+  return {task = task, status = "planned"}
 end
-
 return TaskPlanner

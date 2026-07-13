@@ -1,7 +1,6 @@
+-- Executor module
 local Executor = {}
-
-function Executor.Run(task)
-    return task ~= nil
+function Executor.run(action)
+  return {executed = action}
 end
-
 return Executor

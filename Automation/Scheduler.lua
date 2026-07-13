@@ -1,7 +1,6 @@
+-- Scheduler module
 local Scheduler = {}
-
-function Scheduler.Schedule(task)
-    return task
+function Scheduler.queue(action)
+  return {action = action, scheduled = true}
 end
-
 return Scheduler
