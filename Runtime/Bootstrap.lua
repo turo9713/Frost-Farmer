@@ -2,5 +2,6 @@ local FrostFarmer = FrostFarmer or {}
 FrostFarmer.Runtime = FrostFarmer.Runtime or {}
 
 function FrostFarmer.Runtime.Bootstrap()
-    return true
+    FrostFarmer.Runtime.Loaded = true
+    return FrostFarmer.Runtime.Loaded
 end
