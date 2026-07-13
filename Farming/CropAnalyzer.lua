@@ -1,7 +1,10 @@
+-- CropAnalyzer
+-- Analyzes farm crop state and resources.
+
 local CropAnalyzer = {}
 
-function CropAnalyzer.Analyze(crops)
-    return { count = #crops, ready = true }
+function CropAnalyzer.analyze(crops)
+  return {status = "ready", crops = crops}
 end
 
 return CropAnalyzer
