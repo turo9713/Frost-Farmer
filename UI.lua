@@ -47,6 +47,10 @@ function UI:Create()
     reset:SetPoint("LEFT", point, "RIGHT", 8, 0)
     reset:SetScript("OnClick", function() FF.Tracker:Reset() end)
 
+    local skills = createButton(frame, "Skill bar", 92)
+    skills:SetPoint("LEFT", reset, "RIGHT", 8, 0)
+    skills:SetScript("OnClick", function() FF.ActionBar:Toggle() end)
+
     local summary = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     summary:SetPoint("TOPLEFT", 18, -90)
     summary:SetPoint("RIGHT", -18, 0)

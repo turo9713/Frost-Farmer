@@ -2,14 +2,22 @@ local addonName, FF = ...
 
 _G.FrostFarmer = FF
 FF.name = addonName
-FF.version = "4.0.0"
+FF.version = "4.1.0"
 FF.modules = {}
 
 local defaults = {
     schema = 1,
     settings = {
         autoStart = false,
+        autoCreateMacros = true,
         historyLimit = 20,
+    },
+    actionBar = {
+        enabled = true,
+        locked = false,
+        point = { "CENTER", 0, -220 },
+        profiles = {},
+        defaultMacrosAssigned = false,
     },
     session = nil,
     history = {},

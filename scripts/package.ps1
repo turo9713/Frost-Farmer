@@ -13,7 +13,7 @@ $archive = Join-Path $artifacts "FrostFarmer-$version.zip"
 if (Test-Path -LiteralPath $stage) { Remove-Item -LiteralPath $stage -Recurse -Force }
 New-Item -ItemType Directory -Path $addon -Force | Out-Null
 
-$releaseFiles = @('FrostFarmer.toc', 'Core.lua', 'Tracker.lua', 'Planner.lua', 'UI.lua', 'Commands.lua', 'README.md', 'LICENSE')
+$releaseFiles = @('FrostFarmer.toc', 'Core.lua', 'Tracker.lua', 'Planner.lua', 'MacroManager.lua', 'ActionBar.lua', 'UI.lua', 'Commands.lua', 'README.md', 'LICENSE')
 foreach ($file in $releaseFiles) {
     Copy-Item -LiteralPath (Join-Path $root $file) -Destination $addon
 }
