@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddJsonFile("appsettings.json", optional: false).AddEnvironmentVariables("FROST_");
+builder.Configuration.AddEnvironmentVariables("FROST_");
 builder.Services.Configure<FrostOptions>(builder.Configuration.GetSection(FrostOptions.Section));
 builder.Services.ConfigureHttpJsonOptions(json => json.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 var frost = builder.Configuration.GetSection(FrostOptions.Section).Get<FrostOptions>() ?? new FrostOptions();

@@ -8,6 +8,7 @@ artifacts/
 .nuget/
 .appdata/
 .profile/
+.secrets/
 NuGet/
 frost-farmer.zip
 _import/

@@ -4,6 +4,8 @@ cd "$(dirname "$0")"
 test -f .env || { echo 'Missing deploy/.env' >&2; exit 2; }
 grep -q 'replace-with-' .env && { echo 'Replace placeholder secrets in .env' >&2; exit 2; }
 mkdir -p plugins backups
+chmod 755 plugins
+chmod 700 backups
 docker compose config --quiet
 old_image="$(docker compose images -q app 2>/dev/null || true)"
 if docker compose ps --status running --services 2>/dev/null | grep -q '^postgres$'; then ./backup.sh; fi

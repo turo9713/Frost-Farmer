@@ -24,6 +24,7 @@ services:
       postgres: { condition: service_healthy }
     environment:
       ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://0.0.0.0:8080
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
       FROST_FrostFarmer__DatabaseConnectionString: Host=postgres;Port=5432;Database=frostfarmer;Username=frostfarmer;Password=${POSTGRES_PASSWORD};SSL Mode=Disable
       FROST_FrostFarmer__AllowBootstrapRegistration: ${ALLOW_BOOTSTRAP_REGISTRATION:-true}
