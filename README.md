@@ -1,77 +1,62 @@
 # Frost Farmer 4.0
 
-Frost Farmer is a deployable agent runtime. Version 4.0 accepts goals through an authenticated REST API or web dashboard, plans them, schedules concurrent work, dispatches agent steps, invokes matching plugins, and persists tasks and memory.
+Frost Farmer is a World of Warcraft Retail/Midnight addon for measuring farming sessions. It runs entirely inside WoW and does not control the character, press buttons, or use a remote server.
 
-## Requirements
+## Features
 
-- Windows, Linux, or macOS with the .NET 8 SDK
-- PowerShell 7+ for the supplied automation scripts (Windows PowerShell 5.1 also works)
+- start, stop, reset, and save farming sessions;
+- track money gained or spent during a session;
+- detect positive item-count changes in player bags;
+- calculate vendor value and estimated value per hour;
+- record player map coordinates as route points;
+- show session duration, zone, loot, and recommendations;
+- keep the latest completed sessions in `FrostFarmerDB`;
+- movable in-game dashboard and slash commands;
+- no external libraries, network service, or account credentials.
 
-No third-party NuGet packages are required.
+## Install
 
-## Build and test
+1. Download `FrostFarmer-4.0.0.zip` from Releases or create it with `scripts/package.ps1`.
+2. Extract the `FrostFarmer` folder into:
+   `World of Warcraft/_retail_/Interface/AddOns/`
+3. The resulting path must contain `FrostFarmer/FrostFarmer.toc`.
+4. Restart WoW or type `/reload` and enable **Frost Farmer** in the AddOns screen.
 
-```powershell
-./scripts/build.ps1
-./scripts/integration-test.ps1
-```
+## Use
 
-The first script performs a Release build and runs the unit test executable. The second starts a real HTTP server and verifies authentication, task creation, scheduling, agent execution, plugin dispatch, and persistence.
+- `/ff` — open or close the dashboard;
+- `/ff start` — begin a farming session;
+- `/ff stop` — save the active session;
+- `/ff point` — record the current map position;
+- `/ff status` — print a compact status line;
+- `/ff reset` — discard the current session;
+- `/ff help` — list commands.
 
-## Run locally
+Item tracking compares bag snapshots. It records items added while a session is running. Auction-house prices are not guessed: the current version shows money changes and NPC vendor value only.
 
-Start the development server and create the first administrator in the dashboard:
+## Build and validate
 
-```powershell
-dotnet run --project src/FrostFarmer
-```
-
-Open <http://localhost:5080>. The first account becomes administrator; subsequent public registration is automatically rejected because only the first user may bootstrap the installation.
-
-API routes include `/health/live`, `/health/ready`, `/api/auth/*`, `/api/runtime`, `/api/tasks`, `/api/memory`, and `/api/update`. Protected routes require `Authorization: Bearer TOKEN`.
-
-## Plugins
-
-Create a .NET 8 class library referencing `FrostFarmer.dll`, implement `IFrostPlugin`, and copy its DLL to `plugins/`. Plugins are discovered at startup. A working `echo` plugin is built in and handles goals such as `echo hello`.
-
-## Data and configuration
-
-Development tasks, users and memories are atomically persisted to `data/frost-farmer.db.json`. Production uses PostgreSQL when `FROST_FrostFarmer__DatabaseConnectionString` is set. Settings live in `appsettings.json` and can be overridden using `FROST_` environment variables. `UpdateManifestUrl` may point to JSON shaped like:
-
-```json
-{ "version": "4.0.1", "packageUrl": "https://example/releases/4.0.1.zip", "sha256": "..." }
-```
-
-The update endpoint checks version metadata; installation remains an explicit administrator action.
-
-## Package and install
+On Windows PowerShell:
 
 ```powershell
-./scripts/package.ps1
-./scripts/install.ps1
+powershell -ExecutionPolicy Bypass -File scripts/validate.ps1
+powershell -ExecutionPolicy Bypass -File scripts/package.ps1
 ```
 
-Packaging produces `artifacts/FrostFarmer-4.0.0-win-x64.zip`. The installer copies the expanded release to `%LOCALAPPDATA%\FrostFarmer` by default. Run `FrostFarmer.exe` there and create the first administrator through the dashboard.
+The release archive is written to `artifacts/FrostFarmer-4.0.0.zip`. CI also runs `luac -p` against every Lua source file.
 
-## Online production deployment
+## Saved data
 
-Production uses the root [Dockerfile](Dockerfile) and the stack in `deploy/`: Frost Farmer, PostgreSQL 16 and Caddy with automatic HTTPS. Copy `deploy/.env.example` to `deploy/.env`, configure the domain, ACME email and a random database password, then run `deploy/deploy.sh` on the server. Detailed instructions are in [deploy/README.md](deploy/README.md).
+WoW stores addon data in the account `SavedVariables/FrostFarmer.lua` file. Uninstalling the addon folder does not automatically delete that file.
 
-Pushes to `main` build a GHCR image. The manual `deploy-production` workflow deploys a selected image tag over SSH after GitHub environment approval.
+## Limitations
 
-## Architecture
+- Retail/Midnight (`Interface 120000`) is the supported client.
+- The addon cannot automate movement, combat, gathering, or protected actions.
+- Route points are recorded only when the user presses **Add point** or runs `/ff point`.
+- Auction pricing requires a future optional data-source integration; vendor value is available now.
+- Final compatibility must be smoke-tested in the live WoW client because Blizzard's Lua runtime is not shipped with this repository.
 
-- `FrostRuntime` owns task lifecycle and writes execution results to memory.
-- `PlanningEngine` turns validated goals into agent steps.
-- `TaskSchedulerService` prioritizes queued tasks with bounded concurrency.
-- `AgentSystem` routes steps to analysis and execution agents.
-- `PluginCatalog` discovers external plugin assemblies.
-- `PostgresDatabase` provides pooled production persistence and idempotent schema migrations; `JsonDatabase` is the development fallback.
-- ASP.NET Core provides REST, authentication middleware, structured JSON logs, health checks, and the dashboard.
+## License
 
-## Known limitations
-
-- The built-in executor is deterministic; integrations with external AI providers must be supplied as plugins.
-- Multi-node scheduler coordination is not implemented; run one application replica until task leasing is added.
-- Roles are persisted but the current API exposes only administrator capabilities.
-- The updater only checks version metadata and does not automatically download or execute packages.
+MIT. See [LICENSE](LICENSE).

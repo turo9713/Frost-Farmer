@@ -1,0 +1,15 @@
+## Interface: 120000
+## Title: Frost Farmer
+## Notes: Tracks farming sessions, loot, gold and route points.
+## Author: Frost Farmer Project
+## Version: 4.0.0
+## SavedVariables: FrostFarmerDB
+## IconTexture: Interface\Icons\INV_Misc_Herb_19
+## Category-enUS: Professions
+## Category-ruRU: Профессии
+
+Core.lua
+Tracker.lua
+Planner.lua
+UI.lua
+Commands.lua

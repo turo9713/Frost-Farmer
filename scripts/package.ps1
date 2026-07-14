@@ -1,12 +1,23 @@
 $ErrorActionPreference = 'Stop'
-$root = Split-Path $PSScriptRoot -Parent
-$dotnet = if (Test-Path "$root\.dotnet\dotnet.exe") { "$root\.dotnet\dotnet.exe" } else { 'dotnet' }
-$env:DOTNET_CLI_HOME = "$root\.dotnet-home"
-$env:APPDATA = "$root\.appdata"
-$env:USERPROFILE = "$root\.profile"
-$output = "$root\artifacts\FrostFarmer-4.0.0-win-x64"
-if (Test-Path $output) { Remove-Item $output -Recurse -Force }
-& $dotnet publish "$root\src\FrostFarmer" -c Release -r win-x64 --self-contained false -o $output
-Copy-Item "$root\README.md","$root\LICENSE" $output -ErrorAction SilentlyContinue
-Compress-Archive -Path "$output\*" -DestinationPath "$output.zip" -Force
-Write-Host "Package: $output.zip"
+$root = Split-Path -Parent $PSScriptRoot
+& (Join-Path $PSScriptRoot 'validate.ps1')
+
+$versionLine = Select-String -LiteralPath (Join-Path $root 'FrostFarmer.toc') -Pattern '^## Version: (.+)$'
+if (!$versionLine) { throw 'Version is missing from FrostFarmer.toc.' }
+$version = $versionLine.Matches[0].Groups[1].Value
+$artifacts = Join-Path $root 'artifacts'
+$stage = Join-Path $artifacts 'stage'
+$addon = Join-Path $stage 'FrostFarmer'
+$archive = Join-Path $artifacts "FrostFarmer-$version.zip"
+
+if (Test-Path -LiteralPath $stage) { Remove-Item -LiteralPath $stage -Recurse -Force }
+New-Item -ItemType Directory -Path $addon -Force | Out-Null
+
+$releaseFiles = @('FrostFarmer.toc', 'Core.lua', 'Tracker.lua', 'Planner.lua', 'UI.lua', 'Commands.lua', 'README.md', 'LICENSE')
+foreach ($file in $releaseFiles) {
+    Copy-Item -LiteralPath (Join-Path $root $file) -Destination $addon
+}
+if (Test-Path -LiteralPath $archive) { Remove-Item -LiteralPath $archive -Force }
+Compress-Archive -LiteralPath $addon -DestinationPath $archive -CompressionLevel Optimal
+Remove-Item -LiteralPath $stage -Recurse -Force
+Write-Host "Created $archive"

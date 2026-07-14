@@ -1,6 +1,6 @@
 * text=auto
-*.sh text eol=lf
-Dockerfile text eol=lf
+*.lua text eol=lf
+*.toc text eol=lf
+*.md text eol=lf
+*.ps1 text eol=crlf
 *.yml text eol=lf
-*.yaml text eol=lf
-Caddyfile text eol=lf
