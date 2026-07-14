@@ -7,6 +7,8 @@ public sealed record PlanStep(int Order, string Description, string Agent, bool 
 public sealed record Plan(Guid TaskId, IReadOnlyList<PlanStep> Steps);
 public sealed record AgentDescriptor(string Name, string Description);
 public sealed record PluginDescriptor(string Name, string Version, string Description);
+public sealed record UserAccount(Guid Id, string Username, string PasswordHash, string Role, DateTimeOffset CreatedAt, bool Enabled = true);
+public sealed record AccessToken(Guid Id, Guid UserId, string TokenHash, DateTimeOffset ExpiresAt, DateTimeOffset CreatedAt);
 public sealed record RuntimeSnapshot(string Version, DateTimeOffset StartedAt, int Queued, int Running, int Completed, int Failed, IReadOnlyList<AgentDescriptor> Agents, IReadOnlyList<PluginDescriptor> Plugins);
 
 public interface IFrostPlugin

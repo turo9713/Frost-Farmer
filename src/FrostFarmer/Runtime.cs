@@ -1,6 +1,6 @@
 namespace FrostFarmer;
 
-public sealed class FrostRuntime(JsonDatabase database, PlanningEngine planner, AgentSystem agents, ILogger<FrostRuntime> logger)
+public sealed class FrostRuntime(IFrostDatabase database, PlanningEngine planner, AgentSystem agents, ILogger<FrostRuntime> logger)
 {
     private readonly DateTimeOffset _startedAt = DateTimeOffset.UtcNow;
 

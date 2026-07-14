@@ -2,7 +2,7 @@ using Microsoft.Extensions.Options;
 
 namespace FrostFarmer;
 
-public sealed class TaskSchedulerService(JsonDatabase database, FrostRuntime runtime, IOptions<FrostOptions> options, ILogger<TaskSchedulerService> logger) : BackgroundService
+public sealed class TaskSchedulerService(IFrostDatabase database, FrostRuntime runtime, IOptions<FrostOptions> options, ILogger<TaskSchedulerService> logger) : BackgroundService
 {
     private readonly SemaphoreSlim _slots = new(options.Value.MaxConcurrentTasks, options.Value.MaxConcurrentTasks);
 
