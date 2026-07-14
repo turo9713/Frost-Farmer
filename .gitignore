@@ -1,0 +1,14 @@
+bin/
+obj/
+data/
+plugins/*.dll
+artifacts/
+.dotnet/
+.dotnet-home/
+.nuget/
+.appdata/
+.profile/
+NuGet/
+frost-farmer.zip
+_import/
+dotnet-install.ps1
