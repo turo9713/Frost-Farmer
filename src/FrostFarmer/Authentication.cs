@@ -12,12 +12,12 @@ public sealed class AuthenticationService(IFrostDatabase database, IOptions<Fros
     {
         Validate(username,password);
         if(!options.Value.AllowBootstrapRegistration)throw new InvalidOperationException("Bootstrap registration is closed.");
-        var user=new UserAccount(Guid.NewGuid(),username.Trim(),HashPassword(password),"admin",DateTimeOffset.UtcNow);
+        var user=new UserAccount(Guid.NewGuid(),username.Trim().ToLowerInvariant(),HashPassword(password),"admin",DateTimeOffset.UtcNow);
         if(!await database.TryCreateFirstUserAsync(user))throw new InvalidOperationException("Bootstrap registration is closed.");return await IssueAsync(user);
     }
     public async Task<AuthResult?> LoginAsync(string username,string password)
     {
-        var user=await database.UserByNameAsync(username.Trim());
+        var user=await database.UserByNameAsync(username.Trim().ToLowerInvariant());
         return user is {Enabled:true}&&VerifyPassword(password,user.PasswordHash)?await IssueAsync(user):null;
     }
     public async Task<UserAccount?> AuthenticateAsync(string rawToken)
@@ -29,5 +29,5 @@ public sealed class AuthenticationService(IFrostDatabase database, IOptions<Fros
     private static string HashPassword(string password){var salt=RandomNumberGenerator.GetBytes(16);var hash=Rfc2898DeriveBytes.Pbkdf2(password,salt,210_000,HashAlgorithmName.SHA256,32);return $"pbkdf2-sha256$210000${Convert.ToBase64String(salt)}${Convert.ToBase64String(hash)}";}
     private static bool VerifyPassword(string password,string encoded){var p=encoded.Split('$');if(p.Length!=4||!int.TryParse(p[1],out var rounds))return false;var expected=Convert.FromBase64String(p[3]);var actual=Rfc2898DeriveBytes.Pbkdf2(password,Convert.FromBase64String(p[2]),rounds,HashAlgorithmName.SHA256,expected.Length);return CryptographicOperations.FixedTimeEquals(expected,actual);}
     private static string HashToken(string token)=>Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
-    private static void Validate(string username,string password){if(username.Trim().Length is <3 or >64)throw new ArgumentException("Username must contain 3-64 characters.");if(password.Length<12)throw new ArgumentException("Password must contain at least 12 characters.");}
+    private static void Validate(string username,string password){var normalized=username.Trim().ToLowerInvariant();if(normalized.Length is <3 or >64||normalized.Any(c=>!(char.IsAsciiLetterOrDigit(c)||c is '.' or '_' or '-')))throw new ArgumentException("Username must contain 3-64 ASCII letters, digits, dots, underscores or hyphens.");if(password.Length is <12 or >256)throw new ArgumentException("Password must contain 12-256 characters.");}
 }

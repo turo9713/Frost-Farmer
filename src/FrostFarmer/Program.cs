@@ -3,6 +3,7 @@ using System.Threading.RateLimiting;
 using FrostFarmer;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,7 +29,7 @@ builder.Services.AddHttpClient<UpdateService>();
 builder.Services.AddHostedService<TaskSchedulerService>();
 builder.Services.AddHealthChecks();
 builder.Services.Configure<ForwardedHeadersOptions>(o=>{o.ForwardedHeaders=ForwardedHeaders.XForwardedFor|ForwardedHeaders.XForwardedProto;o.ForwardLimit=1;if(!string.IsNullOrWhiteSpace(frost.DatabaseConnectionString)){o.KnownNetworks.Clear();o.KnownProxies.Clear();}});
-builder.Services.AddRateLimiter(o=>{o.RejectionStatusCode=429;o.GlobalLimiter=PartitionedRateLimiter.Create<HttpContext,string>(ctx=>RateLimitPartition.GetFixedWindowLimiter(ctx.Connection.RemoteIpAddress?.ToString()??"unknown",_=>new(){PermitLimit=frost.RequestsPerMinute,Window=TimeSpan.FromMinutes(1),QueueLimit=0}));});
+builder.Services.AddRateLimiter(o=>{o.RejectionStatusCode=429;o.GlobalLimiter=PartitionedRateLimiter.Create<HttpContext,string>(ctx=>RateLimitPartition.GetFixedWindowLimiter(ctx.Connection.RemoteIpAddress?.ToString()??"unknown",_=>new(){PermitLimit=frost.RequestsPerMinute,Window=TimeSpan.FromMinutes(1),QueueLimit=0}));o.AddFixedWindowLimiter("auth",x=>{x.PermitLimit=10;x.Window=TimeSpan.FromMinutes(1);x.QueueLimit=0;});});
 builder.Logging.AddJsonConsole();
 
 var app = builder.Build();
@@ -59,8 +60,8 @@ app.Use(async (context, next) =>
 app.MapGet("/health/live", () => Results.Ok(new { status = "healthy", version = "4.0.0" }));
 app.MapGet("/health/ready", async (IFrostDatabase db,CancellationToken ct) => await db.IsHealthyAsync(ct)?Results.Ok(new{status="ready"}):Results.StatusCode(503));
 app.MapGet("/health",()=>Results.Redirect("/health/ready"));
-app.MapPost("/api/auth/register",async(AuthRequest r,AuthenticationService auth)=>{try{return Results.Ok(await auth.RegisterAsync(r.Username,r.Password));}catch(Exception e)when(e is ArgumentException or InvalidOperationException){return Results.BadRequest(new{error=e.Message});}});
-app.MapPost("/api/auth/login",async(AuthRequest r,AuthenticationService auth)=>await auth.LoginAsync(r.Username,r.Password) is{} result?Results.Ok(result):Results.Json(new{error="Invalid credentials."},statusCode:401));
+app.MapPost("/api/auth/register",async(AuthRequest r,AuthenticationService auth)=>{try{return Results.Ok(await auth.RegisterAsync(r.Username,r.Password));}catch(Exception e)when(e is ArgumentException or InvalidOperationException){return Results.BadRequest(new{error=e.Message});}}).RequireRateLimiting("auth");
+app.MapPost("/api/auth/login",async(AuthRequest r,AuthenticationService auth)=>await auth.LoginAsync(r.Username,r.Password) is{} result?Results.Ok(result):Results.Json(new{error="Invalid credentials."},statusCode:401)).RequireRateLimiting("auth");
 app.MapPost("/api/auth/logout",async(HttpContext c,AuthenticationService auth)=>{await auth.LogoutAsync((string)c.Items["token"]!);return Results.NoContent();});
 app.MapGet("/api/auth/me",(HttpContext c)=>{var u=(UserAccount)c.Items["user"]!;return Results.Ok(new{u.Id,u.Username,u.Role});});
 app.MapGet("/api/runtime", async (FrostRuntime runtime, PluginCatalog catalog, IEnumerable<IFrostPlugin> builtIns) =>
