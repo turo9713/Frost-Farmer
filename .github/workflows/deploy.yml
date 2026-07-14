@@ -1,0 +1,46 @@
+name: deploy-production
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Image tag to deploy
+        required: true
+        default: latest
+permissions:
+  contents: read
+  packages: read
+concurrency:
+  group: production
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Upload deployment definition
+        env:
+          HOST: ${{ secrets.VPS_HOST }}
+          USER: ${{ secrets.VPS_USER }}
+          PORT: ${{ secrets.VPS_PORT }}
+        run: scp -P "${PORT:-22}" -r deploy/Caddyfile deploy/docker-compose.yml deploy/deploy.sh deploy/backup.sh deploy/restore.sh "$USER@$HOST:/opt/frost-farmer/"
+      - name: Deploy and verify
+        env:
+          HOST: ${{ secrets.VPS_HOST }}
+          USER: ${{ secrets.VPS_USER }}
+          PORT: ${{ secrets.VPS_PORT }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          GHCR_USER: ${{ github.repository_owner }}
+          IMAGE_TAG: ${{ inputs.image_tag }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" | ssh -p "${PORT:-22}" "$USER@$HOST" "docker login ghcr.io -u '$GHCR_USER' --password-stdin"
+          ssh -p "${PORT:-22}" "$USER@$HOST" "cd /opt/frost-farmer && sed -i 's#^APP_IMAGE=.*#APP_IMAGE=ghcr.io/$GHCR_USER/frost-farmer:$IMAGE_TAG#' .env && chmod +x *.sh && ./deploy.sh"
