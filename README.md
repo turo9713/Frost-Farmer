@@ -43,6 +43,17 @@ Item tracking compares bag snapshots. It records items added while a session is 
 
 The first login creates four character macros named `FF: Panel`, `FF: Session`, `FF: Point`, and `FF: Skills`. They appear in `/macro` and are placed into the first four empty Frost Farmer skill-bar slots. Drag spells, items, macros, or existing action-bar actions onto the remaining slots while out of combat. Shift-right-click an unlocked slot to clear it.
 
+
+## SSH VPN-style client
+
+This repository also includes a small standalone SSH VPN-style client for routing application TCP traffic through an SSH server by opening a local SOCKS5 proxy. It does not change the WoW addon and is meant to be run from a terminal:
+
+```bash
+python3 scripts/ssh_vpn_client.py vpn.example.com --user alice --local-port 1080
+```
+
+After it starts, configure your browser or application proxy to `socks5://127.0.0.1:1080`. Stop the tunnel with `Ctrl+C`. Extra SSH options can be passed with repeated `--ssh-arg` values.
+
 ## Build and validate
 
 On Windows PowerShell:
